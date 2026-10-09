@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Swift CFOP — CFOP Algorithms</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --card: #1a1d27;
+      --border: #2a2e3a;
+      --text: #e8eaef;
+      --muted: #9aa0b0;
+      --accent: #00d4aa;
+      --accent2: #5b8cff;
+      --f2l: #00d4aa;
+      --oll: #ffb347;
+      --pll: #c084fc;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+    header {
+      text-align: center;
+      padding: 2rem 1rem 1.5rem;
+      background: linear-gradient(180deg, #151820 0%, var(--bg) 100%);
+      border-bottom: 1px solid var(--border);
+    }
+    header h1 {
+      font-size: 2.4rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    header p {
+      color: var(--muted);
+      margin-top: 0.4rem;
+      font-size: 1.05rem;
+    }
+    .tabs {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 1.25rem 1rem 0.75rem;
+      flex-wrap: wrap;
+      position: sticky;
+      top: 0;
+      background: rgba(15,17,23,0.92);
+      backdrop-filter: blur(12px);
+      z-index: 10;
+      border-bottom: none;
+    }
+    .tab {
+      padding: 0.7rem 1.6rem;
+      border: 2px solid var(--border);
+      border-radius: 999px;
+      background: var(--card);
+      color: var(--text);
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .tab:hover { border-color: var(--muted); transform: translateY(-1px); }
+    .tab.active-f2l { background: var(--f2l); color: #0a0c10; border-color: var(--f2l); }
+    .tab.active-oll { background: var(--oll); color: #0a0c10; border-color: var(--oll); }
+    .tab.active-pll { background: var(--pll); color: #0a0c10; border-color: var(--pll); }
+    .search-wrap {
+      position: sticky;
+      top: 68px;
+      z-index: 9;
+      background: rgba(15,17,23,0.92);
+      backdrop-filter: blur(12px);
+      padding: 0.5rem 1rem 1rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: center;
+    }
+    .search-box {
+      width: 100%;
+      max-width: 420px;
+      padding: 0.7rem 1.1rem 0.7rem 2.6rem;
+      border-radius: 999px;
+      border: 2px solid var(--border);
+      background: var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='%239aa0b0' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85zm-5.242.656a5 5 0 1 1 0-10 5 5 0 0 1 0 10z'/%3E%3C/svg%3E") no-repeat 0.9rem center;
+      color: var(--text);
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-box:focus { border-color: var(--accent); }
+    .search-box::placeholder { color: var(--muted); }
+    .no-results {
+      text-align: center;
+      color: var(--muted);
+      padding: 2rem 1rem;
+      display: none;
+    }
+    main { max-width: 960px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+    .section { display: none; }
+    .section.active { display: block; animation: fadeIn 0.25s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    .section-header {
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-header h2 {
+      font-size: 1.6rem;
+      margin-bottom: 0.3rem;
+    }
+    .section-header p { color: var(--muted); font-size: 0.95rem; }
+    .case {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.2rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.75rem 1.25rem;
+      transition: border-color 0.15s;
+    }
+    .case:hover { border-color: #3a4050; }
+    .case-id {
+      font-weight: 700;
+      font-size: 0.9rem;
+      min-width: 4.5rem;
+      color: var(--accent);
+    }
+    .section[data-section="oll"] .case-id { color: var(--oll); }
+    .section[data-section="pll"] .case-id { color: var(--pll); }
+    .case-name {
+      font-size: 0.9rem;
+      color: var(--muted);
+      min-width: 7rem;
+    }
+    .alg {
+      font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+      font-size: 1.05rem;
+      letter-spacing: 0.03em;
+      background: #12151c;
+      padding: 0.45rem 0.8rem;
+      border-radius: 8px;
+      border: 1px solid #252a36;
+      flex: 1;
+      min-width: 200px;
+      word-break: break-word;
+    }
+    .group-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin: 1.75rem 0 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-size: 0.8rem;
+    }
+    footer {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+    }
+    .note {
+      background: #151820;
+      border-left: 3px solid var(--accent);
+      padding: 0.8rem 1rem;
+      margin-bottom: 1.5rem;
+      border-radius: 0 8px 8px 0;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Swift CFOP</h1>
+    <p>CFOP Algorithm Trainer · F2L → OLL → PLL</p>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active-f2l" data-target="f2l">F2L</button>
+    <button class="tab" data-target="oll">OLL</button>
+    <button class="tab" data-target="pll">PLL</button>
+  </nav>
+
+  <div class="search-wrap">
+    <input type="search" class="search-box" id="search" placeholder="Search cases… (e.g. J, Sune, F2L 12, Ua)" autocomplete="off" />
+  </div>
+
+  <main>
+    <!-- ========== F2L ========== -->
+    <section id="f2l" class="section active" data-section="f2l">
+      <div class="section-header">
+        <h2 style="color:var(--f2l)">F2L — First Two Layers</h2>
+        <p>41 standard cases. Hold the empty slot at Front-Right. Cross on bottom.</p>
+      </div>
+      <div class="note">Most F2L is done intuitively. These are efficient algorithms for every basic case. Learn the easy ones first, then work through the rest.</div>
+
+      <div class="group-title">Basic / Easy Pairs</div>
+      <div class="case"><span class="case-id">F2L 1</span><span class="case-name">Easy right</span><span class="alg">U R U' R'</span></div>
+      <div class="case"><span class="case-id">F2L 2</span><span class="case-name">Easy left</span><span class="alg">U' F' U F</span></div>
+      <div class="case"><span class="case-id">F2L 3</span><span class="case-name">Trivial left</span><span class="alg">F' U' F</span></div>
+      <div class="case"><span class="case-id">F2L 4</span><span class="case-name">Trivial right</span><span class="alg">R U R'</span></div>
+
+      <div class="group-title">Corner & Edge in Top Layer</div>
+      <div class="case"><span class="case-id">F2L 5</span><span class="case-name">Separated 1</span><span class="alg">U' R U' R' U R U R'</span></div>
+      <div class="case"><span class="case-id">F2L 6</span><span class="case-name">Separated 2</span><span class="alg">U F' U F U' F' U' F</span></div>
+      <div class="case"><span class="case-id">F2L 7</span><span class="case-name">Separated 3</span><span class="alg">U' R U R' U R U R'</span></div>
+      <div class="case"><span class="case-id">F2L 8</span><span class="case-name">Separated 4</span><span class="alg">U F' U' F U' F' U' F</span></div>
+      <div class="case"><span class="case-id">F2L 9</span><span class="case-name">Split 1</span><span class="alg">d R' U2 R d' R U R'</span></div>
+      <div class="case"><span class="case-id">F2L 10</span><span class="case-name">Split 2</span><span class="alg">U' R U2 R' d R' U' R</span></div>
+      <div class="case"><span class="case-id">F2L 11</span><span class="case-name">Split 3</span><span class="alg">R U' R' U d R' U' R</span></div>
+      <div class="case"><span class="case-id">F2L 12</span><span class="case-name">Split 4</span><span class="alg">F' U F U' d' F U F'</span></div>
+      <div class="case"><span class="case-id">F2L 13</span><span class="case-name">Double 1</span><span class="alg">U F' U2 F U F' U2 F</span></div>
+      <div class="case"><span class="case-id">F2L 14</span><span class="case-name">Double 2</span><span class="alg">U' R U2 R' U' R U2 R'</span></div>
+      <div class="case"><span class="case-id">F2L 15</span><span class="case-name">Double 3</span><span class="alg">U F' U' F U F' U2 F</span></div>
+      <div class="case"><span class="case-id">F2L 16</span><span class="case-name">Double 4</span><span class="alg">U' R U R' U' R U2 R'</span></div>
+
+      <div class="group-title">Corner Pointing Up, Edge in Top</div>
+      <div class="case"><span class="case-id">F2L 17</span><span class="case-name">White up 1</span><span class="alg">R U2 R' U' R U R'</span></div>
+      <div class="case"><span class="case-id">F2L 18</span><span class="case-name">White up 2</span><span class="alg">F' U2 F U F' U' F</span></div>
+      <div class="case"><span class="case-id">F2L 19</span><span class="case-name">White up 3</span><span class="alg">U R U2 R' U R U' R'</span></div>
+      <div class="case"><span class="case-id">F2L 20</span><span class="case-name">White up 4</span><span class="alg">U' F' U2 F U' F' U F</span></div>
+      <div class="case"><span class="case-id">F2L 21</span><span class="case-name">White up 5</span><span class="alg">U2 R U R' U R U' R'</span></div>
+      <div class="case"><span class="case-id">F2L 22</span><span class="case-name">White up 6</span><span class="alg">U2 F' U' F U' F' U F</span></div>
+      <div class="case"><span class="case-id">F2L 23</span><span class="case-name">White up 7</span><span class="alg">R U R' U' U' R U R' U' R U R'</span></div>
+      <div class="case"><span class="case-id">F2L 24</span><span class="case-name">White up 8</span><span class="alg">y' R' U' R U U R' U' R U R' U' R</span></div>
+
+      <div class="group-title">Corner in Top, Edge in Middle</div>
+      <div class="case"><span class="case-id">F2L 25</span><span class="case-name">Edge mid 1</span><span class="alg">U F' U F U F' U2 F</span></div>
+      <div class="case"><span class="case-id">F2L 26</span><span class="case-name">Edge mid 2</span><span class="alg">U' R U' R' U' R U2 R'</span></div>
+      <div class="case"><span class="case-id">F2L 27</span><span class="case-name">Edge mid 3</span><span class="alg">U F' U' F d' F U F'</span></div>
+      <div class="case"><span class="case-id">F2L 28</span><span class="case-name">Edge mid 4</span><span class="alg">U' R U R' d R' U' R</span></div>
+      <div class="case"><span class="case-id">F2L 29</span><span class="case-name">Edge mid 5</span><span class="alg">R U' R' d R' U R</span></div>
+      <div class="case"><span class="case-id">F2L 30</span><span class="case-name">Edge mid 6</span><span class="alg">R U R' U' R U R' U' R U R'</span></div>
+
+      <div class="group-title">Corner in Bottom, Edge in Top</div>
+      <div class="case"><span class="case-id">F2L 31</span><span class="case-name">Corner bottom 1</span><span class="alg">U R U' R' U' F' U F</span></div>
+      <div class="case"><span class="case-id">F2L 32</span><span class="case-name">Corner bottom 2</span><span class="alg">U' F' U F U R U' R'</span></div>
+      <div class="case"><span class="case-id">F2L 33</span><span class="case-name">Corner bottom 3</span><span class="alg">F' U F U' F' U F</span></div>
+      <div class="case"><span class="case-id">F2L 34</span><span class="case-name">Corner bottom 4</span><span class="alg">R U' R' U R U' R'</span></div>
+      <div class="case"><span class="case-id">F2L 35</span><span class="case-name">Corner bottom 5</span><span class="alg">R U R' U' R U R'</span></div>
+      <div class="case"><span class="case-id">F2L 36</span><span class="case-name">Corner bottom 6</span><span class="alg">F' U' F U F' U' F</span></div>
+
+      <div class="group-title">Both Pieces in Wrong Slot / Advanced</div>
+      <div class="case"><span class="case-id">F2L 37</span><span class="case-name">Stuck 1</span><span class="alg">R U' R' U R U2 R' U R U' R'</span></div>
+      <div class="case"><span class="case-id">F2L 38</span><span class="case-name">Stuck 2</span><span class="alg">R U' R' U' R U R' U' R U2 R'</span></div>
+      <div class="case"><span class="case-id">F2L 39</span><span class="case-name">Stuck 3</span><span class="alg">R U R' U' R U' R' U d R' U' R</span></div>
+      <div class="case"><span class="case-id">F2L 40</span><span class="case-name">Stuck 4</span><span class="alg">R U' R' d R' U' R U' R' U' R</span></div>
+      <div class="case"><span class="case-id">F2L 41</span><span class="case-name">Stuck 5</span><span class="alg">R U' R' d R' U2 R U R' U2 R</span></div>
+    </section>
+
+    <!-- ========== OLL ========== -->
+    <section id="oll" class="section" data-section="oll">
+      <div class="section-header">
+        <h2 style="color:var(--oll)">OLL — Orientation of the Last Layer</h2>
+        <p>All 57 cases. Yellow on top. Match the pattern then execute.</p>
+      </div>
+      <div class="note">Start with the easy ones (Sune, Anti-Sune, T, P, squares). Full OLL is worth learning once your F2L is solid.</div>
+
+      <div class="group-title">All Edges Oriented (OCLL)</div>
+      <div class="case"><span class="case-id">OLL 21</span><span class="case-name">H</span><span class="alg">R U2 R' U' R U R' U' R U' R'</span></div>
+      <div class="case"><span class="case-id">OLL 22</span><span class="case-name">Pi</span><span class="alg">R U2 R2' U' R2 U' R2' U2 R</span></div>
+      <div class="case"><span class="case-id">OLL 23</span><span class="case-name">Headlights</span><span class="alg">R2 D R' U2 R D' R' U2 R'</span></div>
+      <div class="case"><span class="case-id">OLL 24</span><span class="case-name">Chameleon</span><span class="alg">r U R' U' r' F R F'</span></div>
+      <div class="case"><span class="case-id">OLL 25</span><span class="case-name">Bowtie</span><span class="alg">F' r U R' U' r' F R</span></div>
+      <div class="case"><span class="case-id">OLL 26</span><span class="case-name">Anti-Sune</span><span class="alg">R U2 R' U' R U' R'</span></div>
+      <div class="case"><span class="case-id">OLL 27</span><span class="case-name">Sune</span><span class="alg">R U R' U R U2 R'</span></div>
+
+      <div class="group-title">T-shapes</div>
+      <div class="case"><span class="case-id">OLL 33</span><span class="case-name">T1</span><span class="alg">R U R' U' R' F R F'</span></div>
+      <div class="case"><span class="case-id">OLL 45</span><span class="case-name">T2</span><span class="alg">F R U R' U' F'</span></div>
+
+      <div class="group-title">Squares</div>
+      <div class="case"><span class="case-id">OLL 5</span><span class="case-name">Square 1</span><span class="alg">r' U2 R U R' U r</span></div>
+      <div class="case"><span class="case-id">OLL 6</span><span class="case-name">Square 2</span><span class="alg">r U2 R' U' R U' r'</span></div>
+
+      <div class="group-title">C-shapes</div>
+      <div class="case"><span class="case-id">OLL 34</span><span class="case-name">C1</span><span class="alg">R U R2 U' R' F R U R U' F'</span></div>
+      <div class="case"><span class="case-id">OLL 46</span><span class="case-name">C2</span><span class="alg">R' U' R' F R F' U R</span></div>
+
+      <div class="group-title">W-shapes</div>
+      <div class="case"><span class="case-id">OLL 36</span><span class="case-name">W1</span><span class="alg">R' U' R U' R' U R U l U' R' U x</span></div>
+      <div class="case"><span class="case-id">OLL 38</span><span class="case-name">W2</span><span class="alg">R U R' U R U' R' U' R' F R F'</span></div>
+
+      <div class="group-title">Corners Oriented, Edges Flipped</div>
+      <div class="case"><span class="case-id">OLL 28</span><span class="case-name">E1</span><span class="alg">r U R' U' M U R U' R'</span></div>
+      <div class="case"><span class="case-id">OLL 57</span><span class="case-name">E2</span><span class="alg">R U R' U' M' U R U' r'</span></div>
+
+      <div class="group-title">P-shapes</div>
+      <div class="case"><span class="case-id">OLL 31</span><span class="case-name">P1</span><span class="alg">R' U' F U R U' R' F' R</span></div>
+      <div class="case"><span class="case-id">OLL 32</span><span class="case-name">P2</span><span class="alg">S R U R' U' R' F R f'</span></div>
+      <div class="case"><span class="case-id">OLL 43</span><span class="case-name">P3</span><span class="alg">F U' L' U L F'</span></div>
+      <div class="case"><span class="case-id">OLL 44</span><span class="case-name">P4</span><span class="alg">F R U R' U' F'</span></div>
+
+      <div class="group-title">I-shapes (Lines)</div>
+      <div class="case"><span class="case-id">OLL 51</span><span class="case-name">I1</span><span class="alg">f R U R' U' R U R' U' f'</span></div>
+      <div class="case"><span class="case-id">OLL 52</span><span class="case-name">I2</span><span class="alg">R' U' R U' R' U y' R' U R B</span></div>
+      <div class="case"><span class="case-id">OLL 55</span><span class="case-name">I3</span><span class="alg">F U' R2 D R' U2 R D' R2 U F'</span></div>
+      <div class="case"><span class="case-id">OLL 56</span><span class="case-name">I4</span><span class="alg">r' U' r U' R' U R U' R' U R r' U r</span></div>
+
+      <div class="group-title">Fish shapes</div>
+      <div class="case"><span class="case-id">OLL 9</span><span class="case-name">Fish 1</span><span class="alg">R U R' U' R' F R2 U R' U' F'</span></div>
+      <div class="case"><span class="case-id">OLL 10</span><span class="case-name">Fish 2</span><span class="alg">R U R' U R' F R F' R U2 R'</span></div>
+      <div class="case"><span class="case-id">OLL 35</span><span class="case-name">Fish 3</span><span class="alg">R U2 R2' F R F' R U2 R'</span></div>
+      <div class="case"><span class="case-id">OLL 37</span><span class="case-name">Fish 4</span><span class="alg">F R U' R' U' R U R' F'</span></div>
+
+      <div class="group-title">Knight Move shapes</div>
+      <div class="case"><span class="case-id">OLL 13</span><span class="case-name">Knight 1</span><span class="alg">r U' r' U' r U r' y' R' U R</span></div>
+      <div class="case"><span class="case-id">OLL 14</span><span class="case-name">Knight 2</span><span class="alg">R' F R U R' F' R F U' F'</span></div>
+      <div class="case"><span class="case-id">OLL 15</span><span class="case-name">Knight 3</span><span class="alg">r' U' r R' U' R U r' U r</span></div>
+      <div class="case"><span class="case-id">OLL 16</span><span class="case-name">Knight 4</span><span class="alg">r U r' R U R' U' r U' r'</span></div>
+
+      <div class="group-title">Awkward shapes</div>
+      <div class="case"><span class="case-id">OLL 29</span><span class="case-name">Awkward 1</span><span class="alg">R U2 R2' F R F' R U' R' U R U2 R'</span></div>
+      <div class="case"><span class="case-id">OLL 30</span><span class="case-name">Awkward 2</span><span class="alg">F U R U2 R' U' R U2 R' U' F'</span></div>
+      <div class="case"><span class="case-id">OLL 41</span><span class="case-name">Awkward 3</span><span class="alg">R U R' U R U2 R' F R U R' U' F'</span></div>
+      <div class="case"><span class="case-id">OLL 42</span><span class="case-name">Awkward 4</span><span class="alg">R' U' R U' R' U2 R F R U R' U' F'</span></div>
+
+      <div class="group-title">L-shapes</div>
+      <div class="case"><span class="case-id">OLL 47</span><span class="case-name">L1</span><span class="alg">F' L' U' L U L' U' L U F</span></div>
+      <div class="case"><span class="case-id">OLL 48</span><span class="case-name">L2</span><span class="alg">F R U R' U' R U R' U' F'</span></div>
+      <div class="case"><span class="case-id">OLL 49</span><span class="case-name">L3</span><span class="alg">r U' r2 U r2 U r2 U' r</span></div>
+      <div class="case"><span class="case-id">OLL 50</span><span class="case-name">L4</span><span class="alg">r' U r2 U' r2 U' r2 U r'</span></div>
+      <div class="case"><span class="case-id">OLL 53</span><span class="case-name">L5</span><span class="alg">r' U' R U' R' U R U' R' U2 r</span></div>
+      <div class="case"><span class="case-id">OLL 54</span><span class="case-name">L6</span><span class="alg">r U R' U R U' R' U R U2 r'</span></div>
+
+      <div class="group-title">Lightning Bolts</div>
+      <div class="case"><span class="case-id">OLL 7</span><span class="case-name">Bolt 1</span><span class="alg">r U R' U R U2 r'</span></div>
+      <div class="case"><span class="case-id">OLL 8</span><span class="case-name">Bolt 2</span><span class="alg">r' U' R U' R' U2 r</span></div>
+      <div class="case"><span class="case-id">OLL 11</span><span class="case-name">Bolt 3</span><span class="alg">r' R2 U R' U R U2 R' U M'</span></div>
+      <div class="case"><span class="case-id">OLL 12</span><span class="case-name">Bolt 4</span><span class="alg">M' R' U' R U' R' U2 R U' M</span></div>
+      <div class="case"><span class="case-id">OLL 39</span><span class="case-name">Bolt 5</span><span class="alg">L F' L' U' L U F U' L'</span></div>
+      <div class="case"><span class="case-id">OLL 40</span><span class="case-name">Bolt 6</span><span class="alg">R' F R U R' U' F' U R</span></div>
+
+      <div class="group-title">Dot cases (No edges oriented)</div>
+      <div class="case"><span class="case-id">OLL 1</span><span class="case-name">Dot 1</span><span class="alg">R U2 R2 F R F' U2 R' F R F'</span></div>
+      <div class="case"><span class="case-id">OLL 2</span><span class="case-name">Dot 2</span><span class="alg">F R U R' U' F' f R U R' U' f'</span></div>
+      <div class="case"><span class="case-id">OLL 3</span><span class="case-name">Dot 3</span><span class="alg">f R U R' U' f' U' F R U R' U' F'</span></div>
+      <div class="case"><span class="case-id">OLL 4</span><span class="case-name">Dot 4</span><span class="alg">f R U R' U' f' U F R U R' U' F'</span></div>
+      <div class="case"><span class="case-id">OLL 17</span><span class="case-name">Dot 5</span><span class="alg">R U R' U R' F R F' U2 R' F R F'</span></div>
+      <div class="case"><span class="case-id">OLL 18</span><span class="case-name">Dot 6</span><span class="alg">R U2 R2 F R F' U2 M' U R U' r'</span></div>
+      <div class="case"><span class="case-id">OLL 19</span><span class="case-name">Dot 7</span><span class="alg">M U R U R' U' M' R' F R F'</span></div>
+      <div class="case"><span class="case-id">OLL 20</span><span class="case-name">Dot 8</span><span class="alg">M U R U R' U' M2 U R U' r'</span></div>
+    </section>
+
+    <!-- ========== PLL ========== -->
+    <section id="pll" class="section" data-section="pll">
+      <div class="section-header">
+        <h2 style="color:var(--pll)">PLL — Permutation of the Last Layer</h2>
+        <p>All 21 cases. Last layer already oriented (solid color on top).</p>
+      </div>
+      <div class="note">Learn these after 2-look PLL. Most people learn T, J, U, H, Z first.</div>
+
+      <div class="group-title">Edges Only</div>
+      <div class="case"><span class="case-id">Ua</span><span class="case-name">U-perm a</span><span class="alg">R U' R U R U R U' R' U' R2</span></div>
+      <div class="case"><span class="case-id">Ub</span><span class="case-name">U-perm b</span><span class="alg">R2 U R U R' U' R' U' R' U R'</span></div>
+      <div class="case"><span class="case-id">H</span><span class="case-name">H-perm</span><span class="alg">M2 U M2 U2 M2 U M2</span></div>
+      <div class="case"><span class="case-id">Z</span><span class="case-name">Z-perm</span><span class="alg">M2 U M2 U M' U2 M2 U2 M' U2</span></div>
+
+      <div class="group-title">Corners Only</div>
+      <div class="case"><span class="case-id">Aa</span><span class="case-name">A-perm a</span><span class="alg">x R' U R' D2 R U' R' D2 R2 x'</span></div>
+      <div class="case"><span class="case-id">Ab</span><span class="case-name">A-perm b</span><span class="alg">x R2 D2 R U R' D2 R U' R x'</span></div>
+      <div class="case"><span class="case-id">E</span><span class="case-name">E-perm</span><span class="alg">x' R U' R' D R U R' D' R U R' D R U' R' D' x</span></div>
+
+      <div class="group-title">Corners & Edges (Adjacent / Diagonal)</div>
+      <div class="case"><span class="case-id">T</span><span class="case-name">T-perm</span><span class="alg">R U R' U' R' F R2 U' R' U' R U R' F'</span></div>
+      <div class="case"><span class="case-id">F</span><span class="case-name">F-perm</span><span class="alg">R' U' F' R U R' U' R' F R2 U' R' U' R U R' U R</span></div>
+      <div class="case"><span class="case-id">Ja</span><span class="case-name">J-perm a</span><span class="alg">R' U L' U2 R U' R' U2 R L</span></div>
+      <div class="case"><span class="case-id">Jb</span><span class="case-name">J-perm b</span><span class="alg">R U R' F' R U R' U' R' F R2 U' R' U'</span></div>
+      <div class="case"><span class="case-id">Ra</span><span class="case-name">R-perm a</span><span class="alg">R U R' F' R U2 R' U2 R' F R U R U2 R' U'</span></div>
+      <div class="case"><span class="case-id">Rb</span><span class="case-name">R-perm b</span><span class="alg">R' U2 R U2 R' F R U R' U' R' F' R2 U'</span></div>
+      <div class="case"><span class="case-id">V</span><span class="case-name">V-perm</span><span class="alg">R' U R' U' y R' F' R2 U' R' U R' F R F</span></div>
+      <div class="case"><span class="case-id">Y</span><span class="case-name">Y-perm</span><span class="alg">F R U' R' U' R U R' F' R U R' U' R' F R F'</span></div>
+      <div class="case"><span class="case-id">Na</span><span class="case-name">N-perm a</span><span class="alg">R U R' U R U R' F' R U R' U' R' F R2 U' R' U2 R U' R'</span></div>
+      <div class="case"><span class="case-id">Nb</span><span class="case-name">N-perm b</span><span class="alg">R' U R U' R' F' U' F R U R' F R' F' R U' R</span></div>
+
+      <div class="group-title">G-perms (Corner & Edge Cycles)</div>
+      <div class="case"><span class="case-id">Ga</span><span class="case-name">G-perm a</span><span class="alg">R2 U R' U R' U' R U' R2 D U' R' U R D'</span></div>
+      <div class="case"><span class="case-id">Gb</span><span class="case-name">G-perm b</span><span class="alg">R' U' R U D' R2 U R' U R U' R U' R2 D</span></div>
+      <div class="case"><span class="case-id">Gc</span><span class="case-name">G-perm c</span><span class="alg">R2 U' R U' R U R' U R2 D' U R U' R' D</span></div>
+      <div class="case"><span class="case-id">Gd</span><span class="case-name">G-perm d</span><span class="alg">R U R' U' D R2 U' R U' R' U R' U R2 D'</span></div>
+    </section>
+  </main>
+
+  <footer>
+    Swift CFOP · CFOP Algorithm Reference · Practice one section at a time
+  </footer>
+
+  <script>
+    const tabs = document.querySelectorAll('.tab');
+    const sections = document.querySelectorAll('.section');
+    const searchInput = document.getElementById('search');
+
+    function getActiveSection() {
+      return document.querySelector('.section.active');
+    }
+
+    function filterCases() {
+      const query = searchInput.value.trim().toLowerCase();
+      const section = getActiveSection();
+      if (!section) return;
+
+      const cases = section.querySelectorAll('.case');
+      const groups = section.querySelectorAll('.group-title');
+      let visibleCount = 0;
+
+      cases.forEach(c => {
+        const id = (c.querySelector('.case-id')?.textContent || '').toLowerCase();
+        const name = (c.querySelector('.case-name')?.textContent || '').toLowerCase();
+        const alg = (c.querySelector('.alg')?.textContent || '').toLowerCase();
+        const text = id + ' ' + name + ' ' + alg;
+        const match = !query || text.includes(query);
+        c.style.display = match ? '' : 'none';
+        if (match) visibleCount++;
+      });
+
+      // Hide group titles that have no visible cases after them
+      groups.forEach(g => {
+        let next = g.nextElementSibling;
+        let hasVisible = false;
+        while (next && !next.classList.contains('group-title')) {
+          if (next.classList.contains('case') && next.style.display !== 'none') {
+            hasVisible = true;
+            break;
+          }
+          next = next.nextElementSibling;
+        }
+        g.style.display = hasVisible ? '' : 'none';
+      });
+
+      // Show a "no results" message if needed
+      let noRes = section.querySelector('.no-results');
+      if (!noRes) {
+        noRes = document.createElement('div');
+        noRes.className = 'no-results';
+        noRes.textContent = 'No cases match your search.';
+        section.appendChild(noRes);
+      }
+      noRes.style.display = (query && visibleCount === 0) ? 'block' : 'none';
+    }
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const target = tab.dataset.target;
+
+        tabs.forEach(t => {
+          t.classList.remove('active-f2l', 'active-oll', 'active-pll');
+        });
+
+        if (target === 'f2l') tab.classList.add('active-f2l');
+        if (target === 'oll') tab.classList.add('active-oll');
+        if (target === 'pll') tab.classList.add('active-pll');
+
+        sections.forEach(s => {
+          s.classList.toggle('active', s.id === target);
+        });
+
+        // Clear search when switching tabs so you see the full list
+        searchInput.value = '';
+        filterCases();
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    });
+
+    searchInput.addEventListener('input', filterCases);
+  </script>
+</body>
+</html>
