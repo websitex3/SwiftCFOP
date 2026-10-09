@@ -4,6 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Swift CFOP — CFOP Algorithms</title>
+
+  <!-- Favicon Links for GitHub Pages -->
+  <link rel="icon" type="image/png" href="logo.png" />
+  <link rel="apple-touch-icon" href="logo.png" />
+
   <style>
     :root {
       --bg: #0f1117;
@@ -30,6 +35,16 @@
       padding: 2rem 1rem 1.5rem;
       background: linear-gradient(180deg, #151820 0%, var(--bg) 100%);
       border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .logo {
+      width: 72px;
+      height: 72px;
+      object-fit: contain;
+      margin-bottom: 0.75rem;
+      border-radius: 8px;
     }
     header h1 {
       font-size: 2.4rem;
@@ -185,6 +200,8 @@
 </head>
 <body>
   <header>
+    <!-- Logo display inside header -->
+    <img src="logo.png" alt="Swift CFOP Logo" class="logo" />
     <h1>Swift CFOP</h1>
     <p>CFOP Algorithm Trainer · F2L → OLL → PLL</p>
   </header>
@@ -427,7 +444,6 @@
         if (match) visibleCount++;
       });
 
-      // Hide group titles that have no visible cases after them
       groups.forEach(g => {
         let next = g.nextElementSibling;
         let hasVisible = false;
@@ -441,7 +457,6 @@
         g.style.display = hasVisible ? '' : 'none';
       });
 
-      // Show a "no results" message if needed
       let noRes = section.querySelector('.no-results');
       if (!noRes) {
         noRes = document.createElement('div');
@@ -468,7 +483,6 @@
           s.classList.toggle('active', s.id === target);
         });
 
-        // Clear search when switching tabs so you see the full list
         searchInput.value = '';
         filterCases();
 
